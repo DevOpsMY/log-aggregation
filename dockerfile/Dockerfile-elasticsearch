@@ -1,0 +1,5 @@
+ARG ELASTIC_STACK_VERSION
+
+FROM docker.elastic.co/elasticsearch/elasticsearch:${ELASTIC_STACK_VERSION}
+
+COPY ./certificate/elastic-certificates.p12 ./certificate/http.p12 ./config/elasticsearch.yml /usr/share/elasticsearch/config/

@@ -1,0 +1,24 @@
+server.host: '0.0.0.0'
+elasticsearch.hosts: '["https://elasticsearch01:9200","https://elasticsearch02:9200","https://elasticsearch03:9200"]'
+elasticsearch.username: 'elastic'
+elasticsearch.ssl.certificateAuthorities: 'elasticsearch-ca.pem'
+server.ssl.enabled: true
+server.ssl.certificate: 'elastic.crt.pem'
+server.ssl.key: 'elastic.key.pem'
+server.basePath: '/kibana'
+server.rewriteBasePath: true
+xpack.security.authc.providers:
+  basic.basic1:
+    order: 0
+    icon: 'logoElasticsearch'
+    hint: 'Typically for administrators'
+  anonymous.anonymous1:
+    order: 1
+    description: "Continue as Guest"
+    credentials:
+      username: 'kbuser'
+      password: 'kbuser'
+uiSettings:
+  overrides:
+    "theme:darkMode": true
+    "dateFormat": 'YYYY-MMM-DD HH:mm:ss.SSS'

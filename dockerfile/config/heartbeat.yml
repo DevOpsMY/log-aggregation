@@ -1,0 +1,59 @@
+# ================================== Monitors ===================================
+heartbeat.monitors:
+- type: tcp
+  id: <monitor-id-1>
+  name: <monitor name 1>
+  enabled: true
+  schedule: '0 */5 * * * * *'
+  hosts: ["<ip>:<port>"]
+  fields:
+    env: <environment>
+    squad: <squad>
+    layout: <application-1>
+
+- type: http
+  id: <monitor-id-2>
+  name: <monitor name 2>
+  enabled: false
+  schedule: '0 */5 * * * * *'
+  hosts: ["https://<ip>:<port>"]
+  check.request:
+    method: POST
+    headers:
+      'Authorization': 'Basic <authorization>' key
+  check.response.status: [200,302]
+  timeout: 16s
+  ssl.verification_mode: none
+  fields:
+    env: <environment>
+    squad: <squad>
+    layout: <application-2>
+
+- type: http
+  id: <monitor-id-3>
+  name: <monitor name 3>
+  enabled: true
+  schedule: '0 */5 * * * * *'
+  hosts: ["http://<ip>:<port>"]
+  check.request.method: GET
+  check.response:
+    status: [200,302]
+    json:
+      - description: check state
+        condition:
+          equals:
+            offline: false
+  timeout: 16s
+  fields:
+    env: <environment>
+    squad: <squad>
+    layout: <application-3>
+
+# ================================== Outputs ===================================
+output.logstash:
+  hosts: ["logstash:5044"]
+  ssl.certificate_authorities: ["/usr/share/heartbeat/elastic-ca.crt.pem"]
+  ssl.verification_mode: 'certificate'
+  ssl.certificate: "/usr/share/heartbeat/elastic.crt.pem"
+  ssl.key: "/usr/share/heartbeat/elastic.key.pem"
+

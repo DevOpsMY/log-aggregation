@@ -1,0 +1,7 @@
+ARG ELASTIC_STACK_VERSION
+
+FROM docker.elastic.co/kibana/kibana:${ELASTIC_STACK_VERSION}
+
+COPY ./certificate/elasticsearch-ca.pem ./certificate/elastic.crt.pem ./certificate/elastic.key.pem  /usr/share/kibana/
+
+COPY ./config/kibana.yml /usr/share/kibana/config/

@@ -1,0 +1,126 @@
+# ============================== Inputs ===============================
+filebeat.inputs:
+- type: log
+
+  enabled: true
+
+  paths:
+    - <path>/<apache-access-log>.*
+
+  fields:
+    env: <environment>
+    squad: <squad>
+    layout: apache-access
+
+  clean_inactive: 24h
+  ignore_older: 6h
+
+- type: log
+
+  enabled: true
+
+  paths:
+    - <path>/<apache-error-log>.*
+
+  fields:
+    env: <environment>
+    squad: <squad>
+    layout: apache-error
+
+- type: log
+
+  enabled: true
+
+  paths:
+     - <path>/<jboss-log>*.log
+
+  fields:
+    env: <environment>
+    squad: <squad>
+    layout: jboss
+
+  clean_inactive: 24h
+  ignore_older: 6h
+
+  multiline.type: pattern
+  multiline.pattern: '^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2},[0-9]{3}'
+  multiline.negate: true
+  multiline.match: after
+
+- type: log
+
+  enabled: true
+
+  paths:
+    - <path>/<kony-log>*.log
+
+  fields:
+    env: <environment>
+    squad: <squad>
+    layout: kony
+
+  clean_inactive: 24h
+  ignore_older: 6h
+
+  multiline.type: pattern
+  multiline.pattern: '^\[(?:[a-zA-Z$_][a-zA-Z$_0-9]*\.)*[a-zA-Z$_][a-zA-Z$_0-9]*\]\[(FATAL|ERROR| WARN| INFO|DEBUG|TRACE)\]\[[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}.[0-9]{3}[+-][0-9]{2}:[0-9]{2}\]'
+  multiline.negate: true
+  multiline.match: after
+
+- type: log
+
+  enabled: true
+
+  paths:
+    - <path>/<binaries-type1-log>*.log
+    - <path>/<binaries-type1-log>*.log
+    - <path>/<binaries-type1-log>*.log
+
+  fields:
+    env: <environment>
+    squad: <squad>
+    layout: binaries-type1
+
+  clean_inactive: 24h
+  ignore_older: 6h
+
+  multiline.type: pattern
+  multiline.pattern: '^\[(FATAL|ERROR|WARN |INFO |DEBUG|TRACE)\] [0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}.[0-9]{3}'
+  multiline.negate: true
+  multiline.match: after
+
+- type: log
+
+  enabled: true
+
+  paths:
+    - <path>/<binaries-type2-log>*.log
+
+  fields:
+    env: <environment>
+    squad: <squad>
+    layout: binaries-type2
+
+  clean_inactive: 24h
+  ignore_older: 6h
+
+  multiline.type: pattern
+  multiline.pattern: '^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2},[0-9]{3}'
+  multiline.negate: true
+  multiline.match: after
+
+# ================================== Outputs ===================================
+output.logstash:
+  hosts: ["logstash:5044"]
+  ssl.certificate_authorities: ["/usr/share/filebeat/elastic-ca.crt.pem"]
+  ssl.verification_mode: 'certificate'
+  ssl.certificate: "/usr/share/filebeat/elastic.crt.pem"
+  ssl.key: "/usr/share/filebeat/elastic.key.pem"
+
+# =============================== HTTP Endpoint ================================
+# IP on which the HTTP endpoint will bind.
+http.host: filebeat
+
+# Port on which the HTTP endpoint will bind. Default is 5066.
+http.port: 5055
+

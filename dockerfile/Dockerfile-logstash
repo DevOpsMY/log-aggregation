@@ -1,0 +1,11 @@
+ARG ELASTIC_STACK_VERSION
+
+FROM docker.elastic.co/logstash/logstash:${ELASTIC_STACK_VERSION}
+
+USER root
+
+COPY ./certificate/elastic-ca.crt.pem ./certificate/elastic.crt.pem ./certificate/elastic.key.pem  ./certificate/elasticsearch-ca.pem /usr/share/logstash/
+
+COPY ./pipeline/* /usr/share/logstash/pipeline/
+
+COPY ./config/logstash.yml /usr/share/logstash/config/

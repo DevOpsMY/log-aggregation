@@ -1,0 +1,179 @@
+version: "3.9"
+
+services:
+  elasticsearch01:
+    build:
+      context: ./dockerfile
+      dockerfile: Dockerfile-elasticsearch
+      args:
+        - ELASTIC_STACK_VERSION=${ELASTIC_STACK_VERSION}
+    image: elastic-elasticsearch:${ELASTIC_STACK_VERSION}
+    container_name: elasticsearch01
+    hostname: elasticsearch01
+    environment:
+      - discovery.seed_hosts=elasticsearch02,elasticsearch03
+      - ES_JAVA_OPTS=${ELASTICSEARCH_JAVA_OPTS}
+      - ELASTIC_PASSWORD=${ELASTIC_STACK_PASSWORD}
+      - LOG4J_FORMAT_MSG_NO_LOOKUPS=true
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - type: volume
+        source: elastic-volume01
+        target: /usr/share/elasticsearch/data
+    ports:
+      - "50003:9200"
+      - "9300:9300"
+    networks:
+      - elastic
+
+  elasticsearch02:
+    build:
+      context: ./dockerfile
+      dockerfile: Dockerfile-elasticsearch
+      args:
+        - ELASTIC_STACK_VERSION=${ELASTIC_STACK_VERSION}
+    image: elastic-elasticsearch:${ELASTIC_STACK_VERSION}
+    container_name: elasticsearch02
+    hostname: elasticsearch02
+    environment:
+      - discovery.seed_hosts=elasticsearch01,elasticsearch03
+      - ES_JAVA_OPTS=${ELASTICSEARCH_JAVA_OPTS}
+      - ELASTIC_PASSWORD=${ELASTIC_STACK_PASSWORD}
+      - LOG4J_FORMAT_MSG_NO_LOOKUPS=true
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - type: volume
+        source: elastic-volume02
+        target: /usr/share/elasticsearch/data
+    networks:
+      - elastic
+
+  elasticsearch03:
+    build:
+      context: ./dockerfile
+      dockerfile: Dockerfile-elasticsearch
+      args:
+        - ELASTIC_STACK_VERSION=${ELASTIC_STACK_VERSION}
+    image: elastic-elasticsearch:${ELASTIC_STACK_VERSION}
+    container_name: elasticsearch03
+    hostname: elasticsearch03
+    environment:
+      - discovery.seed_hosts=elasticsearch01,elasticsearch02
+      - ES_JAVA_OPTS=${ELASTICSEARCH_JAVA_OPTS}
+      - ELASTIC_PASSWORD=${ELASTIC_STACK_PASSWORD}
+      - LOG4J_FORMAT_MSG_NO_LOOKUPS=true
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - type: volume
+        source: elastic-volume03
+        target: /usr/share/elasticsearch/data
+    networks:
+      - elastic
+
+  logstash:
+    build:
+      context: ./dockerfile
+      dockerfile: Dockerfile-logstash
+      args:
+        - ELASTIC_STACK_VERSION=${ELASTIC_STACK_VERSION}
+    image: elastic-logstash:${ELASTIC_STACK_VERSION}
+    deploy:
+      replicas: 1
+    environment:
+      - ELASTICSEARCH_PASSWORD=${ELASTIC_STACK_PASSWORD}
+      - LOG4J_FORMAT_MSG_NO_LOOKUPS=true
+    ports:
+      - "50005:5044"
+      - "5000:5000/tcp"
+      - "5000:5000/udp"
+      - "9600:9600"
+    networks:
+      - elastic
+    depends_on:
+      - elasticsearch01
+      - elasticsearch02
+      - elasticsearch03
+
+  heartbeat:
+    build:
+      context: ./dockerfile
+      dockerfile: Dockerfile-heartbeat
+      args:
+        - ELASTIC_STACK_VERSION=${ELASTIC_STACK_VERSION}
+    image: elastic-heartbeat:${ELASTIC_STACK_VERSION}
+    deploy:
+      replicas: 1
+    environment:
+      - ELASTICSEARCH_PASSWORD=${ELASTIC_STACK_PASSWORD}
+    networks:
+      - elastic
+    depends_on:
+      - elasticsearch01
+      - elasticsearch02
+      - elasticsearch03
+      - logstash
+
+  filebeat:
+    build:
+      context: ./dockerfile
+      dockerfile: Dockerfile-filebeat
+      args:
+        - ELASTIC_STACK_VERSION=${ELASTIC_STACK_VERSION}
+    image: elastic-filebeat:${ELASTIC_STACK_VERSION}
+    deploy:
+      replicas: 1
+    environment:
+      - ELASTICSEARCH_PASSWORD=${ELASTIC_STACK_PASSWORD}
+    volumes:
+      - type: volume
+        source: elastic-volume04
+        target: /usr/share/filebeat/data
+    networks:
+      - elastic
+    depends_on:
+      - elasticsearch01
+      - elasticsearch02
+      - elasticsearch03
+      - logstash
+
+  kibana:
+    build:
+      context: ./dockerfile
+      dockerfile: Dockerfile-kibana
+      args:
+        - ELASTIC_STACK_VERSION=${ELASTIC_STACK_VERSION}
+    image: elastic-kibana:${ELASTIC_STACK_VERSION}
+    deploy:
+      replicas: 1
+    environment:
+      - ELASTICSEARCH_PASSWORD=${ELASTIC_STACK_PASSWORD}
+    ports:
+      - "50000:5601"
+    networks:
+      - elastic
+    depends_on:
+      - elasticsearch01
+      - elasticsearch02
+      - elasticsearch03
+
+volumes:
+  elastic-volume01:
+  elastic-volume02:
+  elastic-volume03:
+  elastic-volume04:
+
+networks:
+  elastic:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.24.0.0/16
